@@ -19,7 +19,7 @@ library(purrr)
 
 
 ```{r}
-schaefer_lut <- read.table("/Volumes/vosslabhpc/UniversalSoftware/RestingState/ROIs/Schaefer2018_LocalGlobal_MNI/Schaefer2018_400Parcels_17Networks_order.txt",header=FALSE)
+schaefer_lut <- read.table("./xcp_output-fcon/Schaefer2018_400Parcels_17Networks_order.txt",header=FALSE)
 schaefer_lut <- schaefer_lut[,1:2]
 names(schaefer_lut) <- c("roi_index","roi_label")
 schaefer_lut$roi_label = gsub(pattern = "17Networks_", replacement = "", x = schaefer_lut$roi_label)  
@@ -35,9 +35,9 @@ Functional connectivity files of interest
 Load to have a look:
 ```{r}
 # subject 202
-sub_correlation_matrix_vector <- read.table("/Volumes/vosslabhpc/Projects/CREST/derivatives/xcp_output/sub-BIKE202/fcon/schaefer400/sub-BIKE202_schaefer400_network.txt",header=FALSE)
+sub_correlation_matrix_vector <- read.table("./xcp_output-fcon/sub-BIKE202/fcon/schaefer400/sub-BIKE202_schaefer400_network.txt",header=FALSE)
 
-sub_correlation_matrix_net <- read.table("/Volumes/vosslabhpc/Projects/CREST/derivatives/xcp_output/sub-BIKE202/fcon/schaefer400/sub-BIKE202_schaefer400.net",header=FALSE,sep=" ",skip=2)
+sub_correlation_matrix_net <- read.table("./xcp_output-fcon/sub-BIKE202/fcon/schaefer400/sub-BIKE202_schaefer400.net",header=FALSE,sep=" ",skip=2)
 sub_correlation_matrix_net <- sub_correlation_matrix_net[,1:3]
 names(sub_correlation_matrix_net) <- c("roi1","roi2","fc")
 ```
