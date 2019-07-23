@@ -1,0 +1,58 @@
+---
+title: "R Notebook- understand and check xcp fcon output for schaefer parcellation
+output: html_notebook
+---
+
+
+```{r}
+# clear variables
+rm(list=ls(all=TRUE))
+```
+
+
+```{r warning=FALSE}
+library(plyr)
+library(tidyr)
+library(dplyr)
+library(purrr)
+```
+
+
+```{r}
+schaefer_lut <- read.table("/Volumes/vosslabhpc/UniversalSoftware/RestingState/ROIs/Schaefer2018_LocalGlobal_MNI/Schaefer2018_400Parcels_17Networks_order.txt",header=FALSE)
+schaefer_lut <- schaefer_lut[,1:2]
+names(schaefer_lut) <- c("roi_index","roi_label")
+schaefer_lut$roi_label = gsub(pattern = "17Networks_", replacement = "", x = schaefer_lut$roi_label)  
+```
+
+
+Functional connectivity files of interest
+* prefix_{atlas_name}_network.txt # correlation matrix in vector form
+* prefix_{atlas_name}.net # Pajek adjacency matrix
+* prefix_{atlas_name}_ts.1D # Nodal time series
+* prefix_{atlas_name}.nii.gz # atlas in input BOLD signal space
+
+Load to have a look:
+```{r}
+# subject 202
+sub_correlation_matrix_vector <- read.table("/Volumes/vosslabhpc/Projects/CREST/derivatives/xcp_output/sub-BIKE202/fcon/schaefer400/sub-BIKE202_schaefer400_network.txt",header=FALSE)
+
+sub_correlation_matrix_net <- read.table("/Volumes/vosslabhpc/Projects/CREST/derivatives/xcp_output/sub-BIKE202/fcon/schaefer400/sub-BIKE202_schaefer400.net",header=FALSE,sep=" ",skip=2)
+sub_correlation_matrix_net <- sub_correlation_matrix_net[,1:3]
+names(sub_correlation_matrix_net) <- c("roi1","roi2","fc")
+```
+
+look-up table example
+http://best-answer.net/easy-way-to-perform-a-lookup-in-r/
+
+```{r}
+sub_correlation_matrix_net$roi1_name <- schaefer_lut[match(sub_correlation_matrix_net$roi1,schaefer_lut$roi_index),"roi_label"]
+sub_correlation_matrix_net$roi2_name <- schaefer_lut[match(sub_correlation_matrix_net$roi2,schaefer_lut$roi_index),"roi_label"]
+```
+
+
+
+great start!
+-consider separating roi labels by informative pieces for grouping
+-use dplyr to group_by and summarize
+-consider how to run across subjects
