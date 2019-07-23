@@ -50,7 +50,12 @@ sub_correlation_matrix_net$roi1_name <- schaefer_lut[match(sub_correlation_matri
 sub_correlation_matrix_net$roi2_name <- schaefer_lut[match(sub_correlation_matrix_net$roi2,schaefer_lut$roi_index),"roi_label"]
 ```
 
+# separate
+```{r} 
+sub_correlation_matrix_net <- sub_correlation_matrix_net %>%
+    separate(col= roi1_name, sep="_", into = c("roi1_hemi", "roi1_subnetwork", "roi1_region", "roi_regionindex"))
 
+```
 
 great start!
 -consider separating roi labels by informative pieces for grouping
