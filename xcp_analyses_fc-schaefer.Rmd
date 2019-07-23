@@ -56,3 +56,25 @@ great start!
 -consider separating roi labels by informative pieces for grouping
 -use dplyr to group_by and summarize
 -consider how to run across subjects
+
+```{r}
+sub_correlation_matrix_net <- sub_correlation_matrix_net %>%
+separate(col= roi1_name, sep="_", into = c("roi1_hemi", "roi1_subnetwork", "roi1_region", "roi1_regionindex"))
+
+sub_correlation_matrix_net <- sub_correlation_matrix_net %>%
+separate(col= roi2_name, sep="_", into = c("roi2_hemi", "roi2_subnetwork", "roi2_region", "roi2_regionindex"))
+```
+
+
+```{r}
+
+sub_correlation_matrix_net$roi1_regionindex <- ifelse(is.na(sub_correlation_matrix_net$roi1_regionindex),sub_correlation_matrix_net$roi1_region,sub_correlation_matrix_net$roi1_regionindex)
+
+sub_correlation_matrix_net$roi1_region <- ifelse(sub_correlation_matrix_net$roi1_region==sub_correlation_matrix_net$roi1_regionindex," ",sub_correlation_matrix_net$roi1_region)
+
+sub_correlation_matrix_net$roi2_regionindex <- ifelse(is.na(sub_correlation_matrix_net$roi2_regionindex),sub_correlation_matrix_net$roi2_region,sub_correlation_matrix_net$roi2_regionindex)
+
+sub_correlation_matrix_net$roi2_region <- ifelse(sub_correlation_matrix_net$roi2_region==sub_correlation_matrix_net$roi2_regionindex," ",sub_correlation_matrix_net$roi2_region)
+
+```
+
