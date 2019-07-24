@@ -1,7 +1,7 @@
 ---
 
-title: "R Notebook understand and check xcp fcon output for schaefer parcellation
-output: html_notebook
+title:"R Notebook understand and check xcp fcon output for schaefer parcellation
+output:html_notebook
 
 ---
 
@@ -63,60 +63,89 @@ for (i in subs$subject_id){
 
 ```
 
-
+match roi index with label
 
 look-up table example
 http://best-answer.net/easy-way-to-perform-a-lookup-in-r/
 
 ```{r}
-sub_correlation_matrix_net$roi1_name <- schaefer_lut[match(sub_correlation_matrix_net$roi1,schaefer_lut$roi_index),"roi_label"]
-sub_correlation_matrix_net$roi2_name <- schaefer_lut[match(sub_correlation_matrix_net$roi2,schaefer_lut$roi_index),"roi_label"]
+fcon_df$roi1_name <- schaefer_lut[match(fcon_df$roi1,schaefer_lut$roi_index),"roi_label"]
+fcon_df$roi2_name <- schaefer_lut[match(fcon_df$roi2,schaefer_lut$roi_index),"roi_label"]
 ```
 
 
-
-great start!
--consider separating roi labels by informative pieces for grouping
--use dplyr to group_by and summarize
--consider how to run across subjects
-
 ```{r}
-sub_correlation_matrix_net <- sub_correlation_matrix_net %>%
+fcon_df <- fcon_df %>%
 separate(col= roi1_name, sep="_", into = c("roi1_hemi", "roi1_subnetwork", "roi1_region", "roi1_regionindex"))
 
-sub_correlation_matrix_net <- sub_correlation_matrix_net %>%
+fcon_df <- fcon_df %>%
 separate(col= roi2_name, sep="_", into = c("roi2_hemi", "roi2_subnetwork", "roi2_region", "roi2_regionindex"))
 ```
 
 
 ```{r}
-
-sub_correlation_matrix_net$roi1_regionindex <- ifelse(is.na(sub_correlation_matrix_net$roi1_regionindex),sub_correlation_matrix_net$roi1_region,sub_correlation_matrix_net$roi1_regionindex)
-
-sub_correlation_matrix_net$roi1_region <- ifelse(sub_correlation_matrix_net$roi1_region==sub_correlation_matrix_net$roi1_regionindex," ",sub_correlation_matrix_net$roi1_region)
-
-sub_correlation_matrix_net$roi2_regionindex <- ifelse(is.na(sub_correlation_matrix_net$roi2_regionindex),sub_correlation_matrix_net$roi2_region,sub_correlation_matrix_net$roi2_regionindex)
-
-sub_correlation_matrix_net$roi2_region <- ifelse(sub_correlation_matrix_net$roi2_region==sub_correlation_matrix_net$roi2_regionindex," ",sub_correlation_matrix_net$roi2_region)
+# fix the region index and label mapping to their correct columns
+fcon_df$roi1_regionindex <- ifelse(is.na(fcon_df$roi1_regionindex),fcon_df$roi1_region,fcon_df$roi1_regionindex)
+fcon_df$roi1_region <- ifelse(fcon_df$roi1_region==fcon_df$roi1_regionindex," ",fcon_df$roi1_region)
+fcon_df$roi2_regionindex <- ifelse(is.na(fcon_df$roi2_regionindex),fcon_df$roi2_region,fcon_df$roi2_regionindex)
+fcon_df$roi2_region <- ifelse(fcon_df$roi2_region==fcon_df$roi2_regionindex," ",fcon_df$roi2_region)
 
 ```
 
 
-give within and between label for each roi pair
+for each roi pair, give network relation a within and between label 
 ```{r}
-sub_correlation_matrix_net$net_relation <- ifelse(sub_correlation_matrix_net$roi1_subnetwork==sub_correlation_matrix_net$roi2_subnetwork,"within","between")
+fcon_df$net_relation <- ifelse(fcon_df$roi1_subnetwork==fcon_df$roi2_subnetwork,"within","between")
 ```
+
+for each roi pair, give hemisphere label for within or between
+```{r}
+fcon_df$hemi_relation <- ifelse(fcon_df$roi1_hemi==fcon_df$roi2_hemi,"within","between")
+```
+
 
 
 averages for within, group_by subnetwork
 ```{r}
-subnet_avgs <- sub_correlation_matrix_net %>%
-        select(roi1_subnetwork,roi1_hemi,roi2_subnetwork,roi2_hemi,fc,net_relation) %>%
-        filter(net_relation=="within") %>%
-        group_by(roi1_subnetwork) %>%
+subnet_avgs <- fcon_df %>%
+        select(subject_id,roi1_subnetwork,roi1_hemi,roi2_subnetwork,roi2_hemi,fc,net_relation,hemi_relation) %>%
+        filter(net_relation=="within",hemi_relation=="within") %>%
+        group_by(subject_id,roi1_subnetwork,roi1_hemi) %>% 
+        rename(subnetwork = roi1_subnetwork) %>% 
+        rename(hemi = roi1_hemi) %>% 
         summarize(avgfc = mean(fc))
-  
+
 subnet_avgs      
 
+```
+
+
+Keeping in long-form often helpful for plotting and later stats
+```{r}
+
+library(ggplot2)
+
+# center title
+theme_update(plot.title = element_text(hjust = 0.5))
+
+ggplot(data = subnet_avgs, aes(x = subnetwork, y = avgfc, fill=hemi)) +
+        stat_summary(aes(y = avgfc), size=.5, fun.y = mean, geom="bar",size=1, position="dodge") + 
+        stat_summary(fun.data=mean_se, geom="pointrange", size=.5, position=position_dodge(1)) + 
+        scale_colour_manual(values=c("#3366CC","#339900")) +
+        labs(title="Average rsFC") +
+        scale_x_discrete(name="subnetwork") + 
+        scale_y_continuous(name = "Functional Connectivity") +
+        theme(title=element_text(size=20, face='bold'),
+        axis.text.x = element_text(size=10,face='bold',angle = 30, hjust = 1),
+        axis.text.y = element_text(size=20,face='bold'),
+        axis.title.y = element_text(size=15))
+
+```
+
+
+Write out averages to csv for use in additional individual differences analyses (for another notebook)
+
+```{r}
+write.csv(subnet_avgs,"subnet_avgs-schaefer-400_dsn-acompcor.csv",row.names=FALSE)
 ```
 
