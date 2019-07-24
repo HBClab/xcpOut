@@ -1,6 +1,8 @@
 ---
-title: "R Notebook- understand and check xcp fcon output for schaefer parcellation
+
+title: "R Notebook understand and check xcp fcon output for schaefer parcellation
 output: html_notebook
+
 ---
 
 
@@ -32,15 +34,36 @@ Functional connectivity files of interest
 * prefix_{atlas_name}_ts.1D # Nodal time series
 * prefix_{atlas_name}.nii.gz # atlas in input BOLD signal space
 
+
+```{r}
+subs <- read.table("fcon_sublist.txt",header=FALSE)
+names(subs) <- c("subject_id")
+```
+
+
 Load to have a look:
 ```{r}
-# subject 202
-sub_correlation_matrix_vector <- read.table("./xcp_output-fcon/sub-BIKE202/fcon/schaefer400/sub-BIKE202_schaefer400_network.txt",header=FALSE)
 
-sub_correlation_matrix_net <- read.table("./xcp_output-fcon/sub-BIKE202/fcon/schaefer400/sub-BIKE202_schaefer400.net",header=FALSE,sep=" ",skip=2)
-sub_correlation_matrix_net <- sub_correlation_matrix_net[,1:3]
-names(sub_correlation_matrix_net) <- c("roi1","roi2","fc")
+files <- dir(pattern="sub-.*\\_schaefer400\\.net", all.files = T, recursive=T)
+
+fcon_df <- data.frame()
+# sublist <- c("sub-BIKE202","sub-BIKE206")
+
+for (i in subs$subject_id){
+     print(i)
+        subject_id <- i
+        match <- grepl(x=files, pattern=i)
+        whichfile <- files[match]
+        sub_correlation_matrix_net <- read.table(whichfile,header=FALSE,sep=" ",skip=2)
+        sub_correlation_matrix_net <- sub_correlation_matrix_net[,1:3] 
+        names(sub_correlation_matrix_net) <- c("roi1","roi2","fc") # give headers
+        sub_correlation_matrix_net$subject_id <- i
+        fcon_df <<- rbind(fcon_df,sub_correlation_matrix_net)
+}
+
 ```
+
+
 
 look-up table example
 http://best-answer.net/easy-way-to-perform-a-lookup-in-r/
@@ -75,6 +98,25 @@ sub_correlation_matrix_net$roi1_region <- ifelse(sub_correlation_matrix_net$roi1
 sub_correlation_matrix_net$roi2_regionindex <- ifelse(is.na(sub_correlation_matrix_net$roi2_regionindex),sub_correlation_matrix_net$roi2_region,sub_correlation_matrix_net$roi2_regionindex)
 
 sub_correlation_matrix_net$roi2_region <- ifelse(sub_correlation_matrix_net$roi2_region==sub_correlation_matrix_net$roi2_regionindex," ",sub_correlation_matrix_net$roi2_region)
+
+```
+
+
+give within and between label for each roi pair
+```{r}
+sub_correlation_matrix_net$net_relation <- ifelse(sub_correlation_matrix_net$roi1_subnetwork==sub_correlation_matrix_net$roi2_subnetwork,"within","between")
+```
+
+
+averages for within, group_by subnetwork
+```{r}
+subnet_avgs <- sub_correlation_matrix_net %>%
+        select(roi1_subnetwork,roi1_hemi,roi2_subnetwork,roi2_hemi,fc,net_relation) %>%
+        filter(net_relation=="within") %>%
+        group_by(roi1_subnetwork) %>%
+        summarize(avgfc = mean(fc))
+  
+subnet_avgs      
 
 ```
 
