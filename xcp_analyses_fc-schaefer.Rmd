@@ -36,14 +36,18 @@ Functional connectivity files of interest
 
 
 ```{r}
+
+# load sublist
 subs <- read.table("fcon_sublist.txt",header=FALSE)
 names(subs) <- c("subject_id")
 
+# look in all files that match pattern 
 files <- dir(pattern="sub-.*\\_schaefer400\\.net", all.files = T, recursive=T)
 
+# create empty data frame to fill with subject data
 fcon_df <- data.frame()
-# sublist <- c("sub-BIKE202","sub-BIKE206")
 
+# for each subject in list, find+load+reformat variable names, concatenate all subjects with rbind
 for (i in subs$subject_id){
      print(i)
         subject_id <- i
@@ -123,6 +127,7 @@ library(ggplot2)
 # center title
 theme_update(plot.title = element_text(hjust = 0.5))
 
+# making a bar plot with side-by-side bars for a factor
 ggplot(data = subnet_avgs, aes(x = subnetwork, y = avgfc, fill=hemi)) +
         stat_summary(aes(y = avgfc), size=.5, fun.y = mean, geom="bar",size=1, position="dodge") + 
         stat_summary(fun.data=mean_se, geom="pointrange", size=.5, position=position_dodge(1)) + 
@@ -132,8 +137,11 @@ ggplot(data = subnet_avgs, aes(x = subnetwork, y = avgfc, fill=hemi)) +
         scale_y_continuous(name = "Functional Connectivity") +
         theme(title=element_text(size=20, face='bold'),
         axis.text.x = element_text(size=10,face='bold',angle = 30, hjust = 1),
-        axis.text.y = element_text(size=20,face='bold'),
+        axis.text.y = element_text(size=15,face='bold'),
         axis.title.y = element_text(size=15))
+
+# save last made plot, many extensions possible
+ggsave(filename="subnet_avgs-schaefer-400_dsn-acompcor.png",width=300,height=200,units=c("mm"),dpi=300)
 
 ```
 
