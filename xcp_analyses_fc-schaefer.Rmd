@@ -38,11 +38,6 @@ Functional connectivity files of interest
 ```{r}
 subs <- read.table("fcon_sublist.txt",header=FALSE)
 names(subs) <- c("subject_id")
-```
-
-
-Load to have a look:
-```{r}
 
 files <- dir(pattern="sub-.*\\_schaefer400\\.net", all.files = T, recursive=T)
 
@@ -115,8 +110,8 @@ subnet_avgs <- fcon_df %>%
         rename(hemi = roi1_hemi) %>% 
         summarize(avgfc = mean(fc))
 
-subnet_avgs      
-
+head(subnet_avgs)      
+tail(subnet_avgs)     
 ```
 
 
