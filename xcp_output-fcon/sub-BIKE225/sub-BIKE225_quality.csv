@@ -1,0 +1,2 @@
+id0,coregCrossCorr,coregJaccard,coregDice,coregCoverage,meanDV,relMeanRMSMotion,relMaxRMSMotion,motionDVCorrInit,nNuisanceParameters,normDice,normCoverage,normJaccard,normCrossCorr,estimatedLostTemporalDOF,motionDVCorrFinal
+sub-BIKE225,0.9814049,0.9707538,0.9851599,0.9901091,1.162511,0.5649081,1.515002,0.278243,18,0.9390784,0.9840011,0.8851535,0.9189254,18,0.2267268
