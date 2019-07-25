@@ -152,7 +152,7 @@ library(gplots)
 # color cheat sheet https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/colorPaletteCheatsheet.pdf
 new.palette=colorRampPalette(c("lightskyblue","blue","black","red","yellow"),space="rgb") 
 
-matrix_plot<- heatmap.2(a,symm=TRUE,col=new.palette(40),na.rm=TRUE,dendrogram="none",Rowv=FALSE,Colv=FALSE,
+heatmap.2(a,symm=TRUE,col=new.palette(40),na.rm=TRUE,dendrogram="none",Rowv=FALSE,Colv=FALSE,
           trace="none", 
           labRow=FALSE, labCol=FALSE,
           colsep=c(24,49,61,95,127, 140, 167, 192, 216, 250, 267, 306, 337, 353, 377, 400), 
@@ -160,7 +160,6 @@ matrix_plot<- heatmap.2(a,symm=TRUE,col=new.palette(40),na.rm=TRUE,dendrogram="n
           sepwidth=c(0.02,0.02),
           main="Schaefer 400")
 
-ggsave(filename="subnet_matrix-schaefer-400_dsn-acompcor.png",width=300,height=200,units=c("mm"),dpi=300)
 
 ```
 
