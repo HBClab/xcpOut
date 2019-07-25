@@ -56,6 +56,8 @@ for (i in subs$subject_id){
         sub_correlation_matrix_net <- read.table(whichfile,header=FALSE,sep=" ",skip=2)
         sub_correlation_matrix_net <- sub_correlation_matrix_net[,1:3] 
         names(sub_correlation_matrix_net) <- c("roi1","roi2","fc") # give headers
+        sub_correlation_matrix_net$roi1_name <- schaefer_lut[match(sub_correlation_matrix_net$roi1,schaefer_lut$roi_index),"roi_label"]
+        sub_correlation_matrix_net$roi2_name <- schaefer_lut[match(sub_correlation_matrix_net$roi2,schaefer_lut$roi_index),"roi_label"]
         sub_correlation_matrix_net$subject_id <- i
         fcon_df <<- rbind(fcon_df,sub_correlation_matrix_net)
 }
@@ -67,10 +69,13 @@ match roi index with label
 look-up table example
 http://best-answer.net/easy-way-to-perform-a-lookup-in-r/
 
+
 ```{r}
-fcon_df$roi1_name <- schaefer_lut[match(fcon_df$roi1,schaefer_lut$roi_index),"roi_label"]
-fcon_df$roi2_name <- schaefer_lut[match(fcon_df$roi2,schaefer_lut$roi_index),"roi_label"]
+ggplot(data=fcon_df,aes(fc)) +
+        geom_histogram() +
+        facet_wrap(~subject_id)
 ```
+
 
 
 ```{r}
@@ -102,6 +107,72 @@ for each roi pair, give hemisphere label for within or between
 fcon_df$hemi_relation <- ifelse(fcon_df$roi1_hemi==fcon_df$roi2_hemi,"within","between")
 ```
 
+
+```{r}
+fcon_df_plot <- fcon_df %>%
+        select(roi1_subnetwork,roi1,roi2_subnetwork,roi2,fc) %>%
+        arrange(roi1_subnetwork)
+
+# order of roi1_subnetwork sorted
+roi1_sort_order <- fcon_df_plot %>%
+        distinct(roi1_subnetwork) 
+        
+roi1_sort_order
+```
+
+```{r}
+library(igraph)
+
+edgelist <- fcon_df_plot %>%
+        select(roi1,roi2,fc)
+
+# turn edgelist to symmetric adjacency matrix and fill with fc values (rather than count)
+# https://www.biostars.org/p/176923/
+
+# create the graph object
+g<-graph.data.frame(edgelist,directed=FALSE)
+
+# fill symmetric matrix, this takes a while
+a<-as_adjacency_matrix(g, type="both",attr="fc",names=TRUE,sparse=FALSE)
+```
+
+
+```{r}
+check <- fcon_df_plot %>%
+        filter(roi1==121) %>%
+        filter(roi2==122)
+check
+```
+
+
+```{r}
+install.packages("gplots")
+library(gplots)
+
+# color cheat sheet https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/colorPaletteCheatsheet.pdf
+new.palette=colorRampPalette(c("lightskyblue","blue","black","red","yellow"),space="rgb") 
+
+matrix_plot<- heatmap.2(a,symm=TRUE,col=new.palette(40),na.rm=TRUE,dendrogram="none",Rowv=FALSE,Colv=FALSE,
+          trace="none", 
+          labRow=FALSE, labCol=FALSE,
+          colsep=c(24,49,61,95,127, 140, 167, 192, 216, 250, 267, 306, 337, 353, 377, 400), 
+          rowsep=c(24,49,61,95,127, 140, 167, 192, 216, 250, 267, 306, 337, 353, 377, 400),
+          sepwidth=c(0.02,0.02),
+          main="Schaefer 400")
+
+ggsave(filename="subnet_matrix-schaefer-400_dsn-acompcor.png",width=300,height=200,units=c("mm"),dpi=300)
+
+```
+
+
+view with dendrogram , this allows reordering
+```{r}
+heatmap.2(a,symm=TRUE,col=new.palette(40),na.rm=TRUE,
+          trace="none", dendrogram="row",
+          labRow=FALSE, labCol=FALSE,
+          sepwidth=c(0.02,0.02),
+          main="Schaefer 400")
+```
 
 
 averages for within, group_by subnetwork
@@ -144,6 +215,7 @@ ggplot(data = subnet_avgs, aes(x = subnetwork, y = avgfc, fill=hemi)) +
 ggsave(filename="subnet_avgs-schaefer-400_dsn-acompcor.png",width=300,height=200,units=c("mm"),dpi=300)
 
 ```
+
 
 
 Write out averages to csv for use in additional individual differences analyses (for another notebook)
